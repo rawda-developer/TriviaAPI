@@ -15,8 +15,7 @@ class TriviaTestCase(unittest.TestCase):
         self.app = create_app()
         self.client = self.app.test_client
         self.database_name = "trivia_test"
-        self.database_path = "postgres://postgres:password@localhost:5432/{}"
-        .format(self.database_name)
+        self.database_path = "postgres://postgres:clindasol9@localhost:5432/{}".format(self.database_name)
         setup_db(self.app, self.database_path)
 
         # binds the app to the current context
@@ -35,6 +34,25 @@ class TriviaTestCase(unittest.TestCase):
     2 test cases for each end point
     One test case for success, and other for failure
     """
+    '''
+    This will test /categories endpoint success
+    get all categories
+    '''
+    def test_get_all_categories(self):
+        res = self.client().get('/categories')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(len(data['categories']))
+
+    '''
+    This will test /categories endpoint failure
+    get all categories
+    '''
+    def test_get_all_categories_404(self):
+        res = self.client().get('categories/99999')
+        self.assertEqual(res.status_code, 404)
+        data = json.loads(res.data)
+        self.assertFalse(data['success'])
 
     '''
     This will test /questions endpoint success

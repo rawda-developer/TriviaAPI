@@ -56,6 +56,10 @@ def create_app(test_config=None):
     def get_all_categories():
         try:
             categories = Category.query.all()
+            if len(categories) == 0:
+                return jsonify({
+                    'success': False
+                    }), 404
             categories_dictionary = {}
             for category in categories:
                 categories_dictionary[category.id] = category.type
@@ -245,26 +249,26 @@ def create_app(test_config=None):
         return jsonify({
             'success': False,
             'page': 'Error 404 -> Not found'
-        }, 404)
+        }), 404
 
     @app.errorhandler(400)
     def error_400(err):
         return jsonify({
             'success': False,
             'data': 'error 400 -> Bad Request'
-        })
+        }), 400
 
     @app.errorhandler(422)
     def error_422(err):
         return jsonify({
             'success': False,
             'data': 'Error 422 -> Unprocessable Entity'
-        })
+        }), 422
 
     @app.errorhandler(500)
     def error_500(err):
         return jsonify({
             'success': False,
             'data': 'Error 500 -> Internal Server Error'
-        })
+        }), 500
     return app
