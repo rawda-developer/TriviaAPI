@@ -32,7 +32,8 @@ def create_app(test_config=None):
     setup_db(app)
 
     '''
-     Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
+     Set up CORS. Allow '*' for origins.
+     Delete the sample route after completing the TODOs
     '''
     cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
@@ -67,11 +68,11 @@ def create_app(test_config=None):
                 'success': False
             }), 404
 
-    ''' 
-    An endpoint to handle GET requests for questions, 
-    including pagination (every 10 questions). 
-    This endpoint returns a list of questions, 
-    number of total questions, current category, categories. 
+    '''
+    An endpoint to handle GET requests for questions,
+    including pagination (every 10 questions).
+    This endpoint returns a list of questions,
+    number of total questions, current category, categories.
     '''
     @app.route('/questions', methods=['GET'])
     def get_questions():
@@ -95,9 +96,8 @@ def create_app(test_config=None):
             return jsonify({
                 'success': False
             }), 404
-
     '''
-    An endpoint to DELETE question using a question ID. 
+    An endpoint to DELETE question using a question ID.
     '''
     @app.route("/questions/<int:id>", methods=["DELETE"])
     def delete_question(id):
@@ -108,64 +108,67 @@ def create_app(test_config=None):
             }), 404
         question.delete()
         return jsonify({
-            'success': True
+            'success': True,
+            'id': id
         }), 200
 
     '''
-    An endpoint to POST a new question, 
-    which will require the question and answer text, 
+    An endpoint to POST a new question,
+    which will require the question and answer text,
     category, and difficulty score.
+    or
+    get questions based on a search term.
+    It should return any questions for whom the search term
+    is a substring of the question.
     '''
     @app.route('/questions', methods=['POST'])
-    def create_question():
+    def post_question():
         body = request.get_json()
-        question_text = body.get("question", None)
-        answer_text = body.get("answer", None)
-        category_text = body.get("category", None)
-        difficult_score = body.get("difficulty", None)
-        try:
-            question = Question(question=question_text, answer=answer_text, category=category_text, difficulty=difficult_score)
-            question.insert()
-            questions = Question.query.order_by(Question.id).all()
-            current_questions = paginate_questions(request, questions)
-            return jsonify({
-                'success': True,
-                'questions': current_questions,
-                'total_questions': len(Question.query.all())
-            })
-        except:
-            return jsonify({
-                'success': False
-            }), 422
-    '''
-    A POST endpoint to get questions based on a search term. 
-    It should return any questions for whom the search term 
-    is a substring of the question. 
-    '''
-    @app.route('/questions/search', methods=['POST'])
-    def search_questions():
-        search_term = request.args.get('search_term')
-        try:
-            questions = Question.query.filter(
-                Question.question.like('%'+search_term+'%')).all()
-            questions_list = [question.format() for question in questions]
-            if len(questions_list) == 0:
+        if (body.get('searchTerm')):
+            search_term = body.get('searchTerm')
+            try:
+                questions = Question.query.filter(
+                    Question.question.ilike(f'%{search_term}%')).all()
+                questions_list = paginate_questions(request, questions)
+                if len(questions_list) == 0:
+                    return jsonify({
+                        'success': False
+                    }), 404
+                return jsonify({
+                    'total_questions': len(questions_list),
+                    'success': True,
+                    'questions': questions_list
+                })
+            except:
                 return jsonify({
                     'success': False
                 }), 404
-            return jsonify({
-                'total_questions': len(questions_list),
-                'success': True,
-                'questions': questions_list
-            })
-        except:
-            return jsonify({
-                'success': False
-            }), 404
-    '''
-    A GET endpoint to get questions based on category. 
-    '''
+        else:
+            question_text = body.get("question", None)
+            answer_text = body.get("answer", None)
+            category_text = body.get("category", None)
+            difficult_score = body.get("difficulty", None)
+            try:
+                question = Question(question=question_text,
+                                    answer=answer_text,
+                                    category=category_text,
+                                    difficulty=difficult_score)
+                question.insert()
+                questions = Question.query.order_by(Question.id).all()
+                current_questions = paginate_questions(request, questions)
+                return jsonify({
+                    'success': True,
+                    'questions': current_questions,
+                    'total_questions': len(Question.query.all())
+                })
+            except:
+                return jsonify({
+                    'success': False
+                }), 422
 
+    '''
+    A GET endpoint to get questions based on category.
+    '''
     @app.route('/categories/<int:id>/questions')
     def get_questions_by_id(id):
         try:
@@ -176,8 +179,6 @@ def create_app(test_config=None):
                 Question.category == category.id).all()
             if questions is None:
                 abort(404)
-            # creates a list of qustions as dictionaries
-           # questions_list = [question.format() for question in questions]
             return jsonify({
                 'success': True,
                 'questions': paginate_questions(request, questions),
@@ -189,18 +190,21 @@ def create_app(test_config=None):
                 'success': False
             }), 404
     '''
-    A POST endpoint to get questions to play the quiz. 
-    This endpoint should take category and previous question parameters 
-    and return a random questions within the given category, 
-    if provided, and that is not one of the previous questions. 
+    A POST endpoint to get questions to play the quiz.
+    This endpoint should take category and previous question parameters
+    and return a random questions within the given category,
+    if provided, and that is not one of the previous questions.
     '''
     @app.route('/quizzes', methods=['POST'])
     def get_random_question():
         body = request.get_json()
         quiz_category = body.get('quiz_category')
         previous_questions = body.get('previous_questions')
-        if quiz_category is None or previous_questions is None:
-            abort(404)
+        if (quiz_category is None) or (previous_questions is None):
+             return jsonify({
+            'success': False
+        }), 400
+
 
         if quiz_category['id'] == 0:
             questions = Question.query.all()
@@ -236,7 +240,7 @@ def create_app(test_config=None):
         })
 
     '''
-    Error handlers for all expected errors 
+    Error handlers for all expected errors
     '''
     @app.errorhandler(404)
     def error_404(err):
@@ -259,4 +263,10 @@ def create_app(test_config=None):
             'data': 'Error 422 -> Unprocessable Entity'
         })
 
+    @app.errorhandler(500)
+    def error_500(err):
+        return jsonify({
+            'success': False,
+            'data': 'Error 500 -> Internal Server Error'
+        })
     return app

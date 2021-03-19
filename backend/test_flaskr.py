@@ -56,26 +56,6 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 404)
 
     '''
-    This will test /categories endpoint success
-    get all categories
-    '''
-    def test_get_all_categories(self):
-        res = self.client().get('/categories')
-        data = json.loads(res.data)
-        self.assertEqual(res.status_code, 200)
-        self.assertTrue(len(data['categories']))
-
-    '''
-    This will test /categories endpoint failure
-    get all categories
-    '''
-    def test_get_all_categories_404(self):
-        res = self.client().get('/categories/')
-        self.assertEqual(res.status_code, 404)
-        data = json.loads(res.data)
-        self.assertFalse(data['success'])
-
-    '''
     This will test /questions/<id> delete endpoint success
     get all questions
     '''
@@ -123,11 +103,11 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 405)
 
     '''
-    This will test /questions/search?search_term create endpoint success
+    This will test /questions create endpoint success
     search questions based on a keyword
     '''
     def test_search_question(self):
-        res = self.client().post('/questions/search?search_term=lake')
+        res = self.client().post('/questions', json={'searchTerm': 'egyptians'})
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['total_questions'])
@@ -139,7 +119,7 @@ class TriviaTestCase(unittest.TestCase):
     search questions based on a keyword
     '''
     def test_search_question_404(self):
-        res = self.client().post('/questions/search?no_question')
+        res = self.client().post('/questions', json={"searchTerm": "1234567"})
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 404)
         self.assertFalse(data['success'])
@@ -173,7 +153,7 @@ class TriviaTestCase(unittest.TestCase):
     def test_get_random_question(self):
         res = self.client().post('/quizzes', json={
             "quiz_category": {
-                "id": 6,
+                "id": 1,
                 "type": "Sports"
             },
             "previous_questions": [
@@ -196,7 +176,7 @@ class TriviaTestCase(unittest.TestCase):
     get a random question based on quiz_category and previous_questions
     '''
     def test_get_random_question_400(self):
-        res = self.client().post('/quizzes', json={'wrong_attr': -1})
+        res = self.client().post('/quizzes', json={})
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 400)
         self.assertFalse(data['success'])
