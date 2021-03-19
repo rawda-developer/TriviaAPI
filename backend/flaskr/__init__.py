@@ -124,7 +124,7 @@ def create_app(test_config=None):
     @app.route('/questions', methods=['POST'])
     def post_question():
         body = request.get_json()
-        if (body.get('searchTerm')):
+        if body.get('searchTerm'):
             search_term = body.get('searchTerm')
             try:
                 questions = Question.query.filter(
@@ -201,11 +201,9 @@ def create_app(test_config=None):
         quiz_category = body.get('quiz_category')
         previous_questions = body.get('previous_questions')
         if (quiz_category is None) or (previous_questions is None):
-             return jsonify({
-            'success': False
-        }), 400
-
-
+            return jsonify({
+                'success': False
+                }), 400
         if quiz_category['id'] == 0:
             questions = Question.query.all()
         else:
